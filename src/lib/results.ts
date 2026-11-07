@@ -116,6 +116,15 @@ export async function updateReport(id: string, report: JsonObject | null) {
   if (error) throw error;
 }
 
+/** Typed in by hand from another audiometer: the only kind whose audiogram can be corrected. */
+export const isManualEntry = (r: SessionRow) => r.source === "doctor" && !r.calibrated && r.device?.entry === "manual";
+
+/** Only allowed by the database for manually typed sessions. */
+export async function updateAudiogram(id: string, audiogram: JsonObject) {
+  const { error } = await supabase.from(TABLE).update({ audiogram }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function deleteSession(id: string) {
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
   if (error) throw error;

@@ -34,6 +34,9 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  /* AudiometricReport report components */
+  --color-primary-hover: color-mix(in oklch, var(--primary) 85%, black);
+  --color-primary-focus: color-mix(in oklch, var(--primary) 40%, white);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -178,3 +181,11 @@
 .legal a {
   text-decoration: underline;
 }
+
+/* AudiometricReport components */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.animate-fadeIn { animation: fadeIn 0.25s ease-out; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+@media print { .no-print { display: none !important; } }

@@ -1,10 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Printer } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, ArrowLeft, Loader2, Stethoscope, Tag, User } from "lucide-react";
+import { toast } from "sonner";
+import { Header } from "@/components/Header";
+import { ReportEditor } from "@/components/ReportEditor";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLang } from "@/lib/i18n";
-import { getSession } from "@/lib/results";
+import { getSession, isManualEntry, updateAudiogram, updateReport } from "@/lib/results";
+import { getProfessionalDefaults } from "@/lib/profile";
+import { compactAudiogram, fromStoredReport, normalizeAudiogram, recallIdentity, rememberIdentity } from "@/lib/audiometry/report";
 
 export const Route = createFileRoute("/_authenticated/informe/$id")({
   component: ReportPage,
@@ -13,50 +18,73 @@ export const Route = createFileRoute("/_authenticated/informe/$id")({
 function ReportPage() {
   const { id } = Route.useParams();
   const { lang, t } = useLang();
+  const qc = useQueryClient();
   const { data: r, isLoading } = useQuery({ queryKey: ["session", id], queryFn: () => getSession(id) });
+  const { data: pro } = useQuery({ queryKey: ["professional"], queryFn: getProfessionalDefaults });
 
   return (
     <div className="min-h-screen bg-muted/30 print:bg-white">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 print:hidden">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/bandeja">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t("print.back")}
-          </Link>
-        </Button>
-        <div className="flex items-center gap-2">
-          <LanguageToggle />
-          <Button size="sm" onClick={() => window.print()} disabled={!r}>
-            <Printer className="mr-2 h-4 w-4" />
-            {t("print.print")}
+      <div className="print:hidden">
+        <Header />
+      </div>
+      <main className="mx-auto max-w-6xl px-4 py-6 print:max-w-none print:p-0">
+        <div className="mb-4 print:hidden">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/bandeja">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t("print.back")}
+            </Link>
           </Button>
         </div>
-      </div>
-      <main className="mx-auto max-w-3xl bg-white px-6 pb-12 pt-6 text-slate-900 shadow-sm print:max-w-none print:px-0 print:shadow-none">
-        {isLoading && <p className="text-sm text-muted-foreground">{t("inbox.loading")}</p>}
+        {(isLoading || !pro) && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
         {!isLoading && !r && <p className="text-sm text-muted-foreground">{t("report.not_available")}</p>}
-        {r && (
-          <>
-            <header className="mb-5 border-b pb-4">
-              <p className="text-xs uppercase tracking-wide text-slate-500">{t("app.name")}</p>
-              <h1 className="text-2xl font-bold">{t("report.title")}</h1>
-              <p className="mt-1 text-sm text-slate-600">
-                {t("report.date")}: {new Date(r.created_at).toLocaleString(lang === "en" ? "en-GB" : "es-ES")}
-                {r.label && <> · {t("report.label")}: <strong>{r.label}</strong></>}
-                {" · "}
-                {t("report.sex")}: {t(`setup.sex.${r.sex}`)} · {t("report.age")}: {t(`setup.age.${r.age_group}`)}
-                {" · "}
-                {t(`inbox.source.${r.source}`)} · {t("inbox.version")}: {r.app_version}
-              </p>
-            </header>
-            {!r.calibrated && (
-              <p className="mb-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{t("report.not_calibrated")}</p>
-            )}
-            <p className="rounded border border-dashed p-4 text-sm text-slate-500">{t("inbox.report_pending")}</p>
-          </>
+        {r && pro && (
+          <ReportEditor
+            key={r.id}
+            initial={(() => {
+              const stored = fromStoredReport(r.report);
+              const identity = recallIdentity(r.id);
+              return { audiogram: normalizeAudiogram(r.audiogram), ...stored, info: { ...stored.info, ...(identity ?? {}) } };
+            })()}
+            audiogramEditable={isManualEntry(r)}
+            professionalDefaults={pro}
+            banner={
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  {r.source === "doctor" ? (
+                    <Badge variant="outline" className="gap-1"><Stethoscope className="h-3 w-3" />{t("inbox.source.doctor")}</Badge>
+                  ) : (
+                    <Badge variant="outline" className="gap-1"><User className="h-3 w-3" />{t("inbox.source.patient")}</Badge>
+                  )}
+                  {r.label && <Badge variant="outline" className="gap-1"><Tag className="h-3 w-3" />{r.label}</Badge>}
+                  <span className="text-muted-foreground">
+                    {new Date(r.created_at).toLocaleString(lang === "en" ? "en-GB" : "es-ES")} · {t(`inbox.origin.${r.device?.entry ?? (r.source === "patient" ? "remote" : "manual")}`)}
+                  </span>
+                </div>
+                {r.source === "patient" && (
+                  <p className="flex gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    {t("report.not_calibrated")}
+                  </p>
+                )}
+              </div>
+            }
+            onSave={async ({ audiogram, report, identity }) => {
+              try {
+                if (isManualEntry(r)) await updateAudiogram(r.id, compactAudiogram(audiogram));
+                await updateReport(r.id, report as unknown as Record<string, unknown>);
+                rememberIdentity(r.id, identity);
+                void qc.invalidateQueries({ queryKey: ["sessions"] });
+                void qc.invalidateQueries({ queryKey: ["session", id] });
+                toast.success(t("report.saved"));
+              } catch (e) {
+                console.error("[report save]", e);
+                toast.error(t("report.save_error"));
+              }
+            }}
+          />
         )}
       </main>
-      <style>{`@media print { @page { size: A4; margin: 12mm; } details > *:not(summary) { display: block; } }`}</style>
     </div>
   );
 }

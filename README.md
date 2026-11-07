@@ -19,11 +19,20 @@ Dos modos (ver [`PLAN.md`](PLAN.md)):
 
 **Fase 1a (esqueleto):** autenticación del médico, panel con QR y hoja imprimible, bandeja
 (etiquetas, leído/no leído, copiar, eliminar, tiempo real), configuración y esquema de Supabase
-`audiometry_sessions` con RLS. La página del paciente, la audiometría en consulta y el informe
-son marcadores de posición que se completan en las fases siguientes.
+`audiometry_sessions` con RLS.
 
-Pendiente en 1b–1c: motor de AudiometricReport (tipos, cálculos, gráficos, generador de informes)
-y adaptación de los textos legales (aún heredados de Vocalyzer).
+**Fase 1b (motor de informes, de AudiometricReport):** en `src/audiometric/` están los tipos,
+cálculos (PTA y % de pérdida AAO-HNS / AMA / AAOO, control de calidad de datos), gráficos
+(audiograma, timpanograma, logoaudiometría) e informe A4. «Audiometría en consulta» abre el editor
+completo (antecedentes, estudios auditivos, diagnóstico y firma) y guarda en la bandeja; desde la
+bandeja, «Informe» reabre el editor para completar impedanciometría, logoaudiometría y diagnóstico.
+
+- Los datos identificativos (nombre, apellidos, documento, fecha de nacimiento) **no se guardan**:
+  solo viven en la memoria de la pestaña para imprimir. Se guardan la edad y los datos clínicos.
+- Los audiogramas **introducidos a mano** pueden corregirse; los registrados por el sistema
+  (prueba del paciente o audiómetro calibrado) son inmutables (trigger en la base de datos).
+
+Pendiente en 1c: textos legales (aún heredados de Vocalyzer).
 
 ## Puesta en marcha
 

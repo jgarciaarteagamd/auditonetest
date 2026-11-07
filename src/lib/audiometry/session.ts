@@ -15,6 +15,8 @@ export interface SessionInfo {
 
 /** Transducer used for the test. */
 export interface DeviceInfo {
+  /** manual = typed in from another audiometer; audiometer = Auditone calibrated session; remote = patient check. */
+  entry?: "manual" | "audiometer" | "remote";
   transducer?: "insert" | "earbuds" | "supra-aural" | "circumaural" | "unknown";
   connection?: "wired" | "wireless" | "unknown";
   model?: string;

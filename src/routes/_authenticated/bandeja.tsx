@@ -24,7 +24,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLang } from "@/lib/i18n";
-import { countThresholds, summaryText } from "@/lib/audiometry/summary";
+import { summaryText } from "@/lib/audiometry/summary";
+import { normalizeAudiogram, ptaSummary, fromStoredReport } from "@/lib/audiometry/report";
+import AudiogramChart from "@/audiometric/components/AudiogramChart";
+import { Ear } from "@/audiometric/types";
 import {
   deleteSession,
   listMySessions,
@@ -130,6 +133,9 @@ function ResultCard({ r, onChanged }: { r: SessionRow; onChanged: () => void }) 
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const audiogram = normalizeAudiogram(r.audiogram);
+  const pta = ptaSummary(r.audiogram, fromStoredReport(r.report).standard);
 
   async function act(fn: () => Promise<void>) {
     try {
@@ -247,10 +253,10 @@ function ResultCard({ r, onChanged }: { r: SessionRow; onChanged: () => void }) 
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric label={t("inbox.origin")} value={t(`inbox.origin.${r.device?.entry ?? (r.source === "patient" ? "remote" : "manual")}`)} />
           <Metric label={t("inbox.calibration")} value={r.calibrated ? t("inbox.calibrated") : t("inbox.not_calibrated")} />
-          <Metric label={t("inbox.transducer")} value={t(`device.transducer.${r.device.transducer ?? "unknown"}`)} />
-          <Metric label={t("inbox.thresholds")} value={String(countThresholds(r.audiogram))} />
-          <Metric label={t("inbox.version")} value={r.app_version} />
+          <Metric label={t("inbox.pta_right")} value={pta.right ? `${pta.right} dB` : "—"} />
+          <Metric label={t("inbox.pta_left")} value={pta.left ? `${pta.left} dB` : "—"} />
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -261,14 +267,21 @@ function ResultCard({ r, onChanged }: { r: SessionRow; onChanged: () => void }) 
           <Button size="sm" variant="outline" asChild>
             <Link to="/informe/$id" params={{ id: r.id }}>
               <Printer className="mr-1 h-4 w-4" />
-              {t("inbox.print")}
+              {t("inbox.open_report")}
             </Link>
           </Button>
         </div>
 
         {open && (
           <div className="mt-4 space-y-5">
-            <p className="rounded border border-dashed p-4 text-sm text-muted-foreground">{t("inbox.report_pending")}</p>
+            <div className="grid gap-4 text-slate-900 md:grid-cols-2">
+              <div className="aspect-[4/3] overflow-hidden rounded-xl border border-red-200 bg-white sm:aspect-auto sm:h-[300px]">
+                <AudiogramChart ear={Ear.Right} data={audiogram.right} />
+              </div>
+              <div className="aspect-[4/3] overflow-hidden rounded-xl border border-blue-200 bg-white sm:aspect-auto sm:h-[300px]">
+                <AudiogramChart ear={Ear.Left} data={audiogram.left} />
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

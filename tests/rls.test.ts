@@ -92,6 +92,31 @@ describe("audiometry_sessions RLS", () => {
   });
 });
 
+describe("manual audiogram corrections", () => {
+  const add = (source: string, calibrated: boolean, entry: string, role: "anon" | "authenticated" = "authenticated") =>
+    as(
+      role,
+      role === "anon" ? null : D1,
+      `INSERT INTO public.audiometry_sessions (doctor_id, source, seen, calibrated, app_version, device, audiogram)
+       VALUES ('${D1}', '${source}', ${role === "anon" ? "false" : "true"}, ${calibrated}, 'auditone-0.1.0', '{"entry":"${entry}"}', '{"right":{"air":{"1000":20}}}')
+       RETURNING id`,
+    );
+  const fix = (id: unknown) =>
+    as("authenticated", D1, `UPDATE public.audiometry_sessions SET audiogram = '{"right":{"air":{"1000":25}}}' WHERE id = '${id}'`);
+
+  it("doctors can correct manually typed audiograms only", async () => {
+    const manual = await add("doctor", false, "manual");
+    expect((await fix(manual.rows[0].id)).ok).toBe(true);
+    const calibrated = await add("doctor", true, "audiometer");
+    expect((await fix(calibrated.rows[0].id)).error).toContain("audiogram_immutable");
+    expect((await as("anon", null, `INSERT INTO public.audiometry_sessions (doctor_id, app_version, device) VALUES ('${D1}', 'v', '{"entry":"remote"}')`)).ok).toBe(true);
+    const patient = await as("authenticated", D1, "SELECT id FROM public.audiometry_sessions WHERE source = 'patient' LIMIT 1");
+    expect((await fix(patient.rows[0].id)).error).toContain("audiogram_immutable");
+    // the report of any own session stays editable
+    expect((await as("authenticated", D1, `UPDATE public.audiometry_sessions SET report = '{"plan":"x"}' WHERE id = '${calibrated.rows[0].id}'`)).ok).toBe(true);
+  });
+});
+
 describe("keepalive", () => {
   it("anonymous clients can call keepalive() (used by the scheduled Netlify function)", async () => {
     const r = await as("anon", null, "SELECT public.keepalive() AS t");

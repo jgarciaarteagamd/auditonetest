@@ -1,7 +1,7 @@
-// Plain-text summary for the inbox "Copy" button. In phase 1b this will use the PTA and
-// classification from AudiometricReport's calculations.
+// Plain-text summary for the inbox "Copy" button (PTA from AudiometricReport's calculations).
 import type { SessionRow } from "../results";
 import type { Lang } from "./session";
+import { fromStoredReport, ptaSummary } from "./report";
 
 /** Counts the threshold values stored in an audiogram JSON (any nesting). */
 export function countThresholds(audiogram: unknown): number {
@@ -24,6 +24,9 @@ export function summaryText(r: SessionRow, lang: Lang): string {
       : es ? "NO CALIBRADO — resultado informativo." : "NOT CALIBRATED — informative result.",
   ];
   if (r.label) lines.push(`${es ? "Etiqueta" : "Label"}: ${r.label}`);
-  lines.push(`${es ? "Umbrales registrados" : "Thresholds recorded"}: ${countThresholds(r.audiogram)}`);
+  const pta = ptaSummary(r.audiogram, fromStoredReport(r.report).standard);
+  lines.push(`${es ? "PTA vía aérea" : "Air-conduction PTA"} (${pta.standard}): ${es ? "OD" : "R"} ${pta.right || "—"} dB · ${es ? "OI" : "L"} ${pta.left || "—"} dB`);
+  const plan = fromStoredReport(r.report).info;
+  if (plan.juicioClinico) lines.push(`${es ? "Juicio clínico" : "Clinical impression"}: ${plan.juicioClinico}`);
   return lines.join("\n");
 }
