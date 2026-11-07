@@ -13,7 +13,7 @@ export const OWNER = {
   email: "jgarciaarteaga.md@gmail.com",
 };
 
-export const LAST_UPDATED = { es: "31 de octubre de 2026", en: "31 October 2026" };
+export const LAST_UPDATED = { es: "7 de noviembre de 2026", en: "7 November 2026" };
 
 export function LegalLayout({ titleKey, children, other }: { titleKey: string; children: ReactNode; other: "terms" | "privacy" }) {
   const { lang, t } = useLang();

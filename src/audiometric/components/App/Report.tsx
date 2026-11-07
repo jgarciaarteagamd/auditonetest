@@ -302,6 +302,9 @@ const Report: React.FC<{ data: FullReportData }> = ({ data }) => {
                 <div className="h-6 w-16 bg-slate-100 rounded border border-slate-200 flex items-center justify-center text-[6px] transition-all duration-300 hover:shadow-md cursor-pointer">[LOGO]</div> */}
             </div>
             <div className="pt-2 pb-2 text-center">
+                {reportInfo.footerText && (
+                    <p className="text-[8px] leading-tight max-w-2xl mx-auto normal-case tracking-normal text-amber-700 not-italic mb-0.5">{reportInfo.footerText}</p>
+                )}
                 <p className="text-[7px] leading-tight italic max-w-2xl mx-auto normal-case tracking-normal">{t('free.report.legalFooter')}</p>
             </div>
             <div className="pt-2 pb-2 text-right text-[9px] flex justify-end">

@@ -32,7 +32,12 @@ bandeja, «Informe» reabre el editor para completar impedanciometría, logoaudi
 - Los audiogramas **introducidos a mano** pueden corregirse; los registrados por el sistema
   (prueba del paciente o audiómetro calibrado) son inmutables (trigger en la base de datos).
 
-Pendiente en 1c: textos legales (aún heredados de Vocalyzer).
+**Fase 1c (textos legales):** Términos de uso y Política de privacidad propios (ES/EN): sin
+marcado CE, prueba del paciente solo informativa, limitaciones del generador de informes y de la
+audiometría en consulta, encargo del tratamiento (art. 28 RGPD) y datos que no se guardan. Pantalla
+de consentimiento del paciente, hoja del QR, declaración profesional del registro y aviso impreso
+al pie del informe («NO CALIBRADO» en pruebas del paciente; «sin marcado CE» en sesiones del
+audiómetro Auditone).
 
 ## Puesta en marcha
 

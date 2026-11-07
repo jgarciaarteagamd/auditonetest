@@ -48,6 +48,13 @@ function ReportPage() {
             })()}
             audiogramEditable={isManualEntry(r)}
             professionalDefaults={pro}
+            printNotice={
+              r.source === "patient"
+                ? t("report.print_notice.remote")
+                : r.device?.entry === "audiometer"
+                  ? t("report.print_notice.audiometer")
+                  : undefined
+            }
             banner={
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2 text-sm">

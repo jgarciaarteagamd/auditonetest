@@ -56,6 +56,7 @@ export function ReportEditor({
   audiogramEditable,
   professionalDefaults,
   banner,
+  printNotice,
   onSave,
 }: {
   initial: ReportEditorInitial;
@@ -63,6 +64,8 @@ export function ReportEditor({
   audiogramEditable: boolean;
   professionalDefaults: Professional;
   banner?: React.ReactNode;
+  /** Legal notice printed at the foot of every report page (e.g. not calibrated). */
+  printNotice?: string;
   onSave: (data: { audiogram: AudiogramData; report: StoredReport; identity: PatientIdentity }) => Promise<void>;
 }) {
   const { t } = useLang();
@@ -128,7 +131,7 @@ export function ReportEditor({
   }
 
   const fullData: FullReportData = {
-    reportInfo: { ...info, facultativo: pro.name, profesion: pro.profession, matricula: pro.license, footerText: "" },
+    reportInfo: { ...info, facultativo: pro.name, profesion: pro.profession, matricula: pro.license, footerText: printNotice ?? "" },
     calculatedValues: calculated,
     audiogram,
     speechAudiometry: speech,

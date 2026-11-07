@@ -1,14 +1,14 @@
 import { useId, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Cpu, DatabaseZap, Mic, ShieldCheck } from "lucide-react";
+import { Headphones, Info, Mic, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLang } from "@/lib/i18n";
 
 /**
- * Consent screen shown before any recording: explains that the analysis runs in the browser and
- * that the voice is never stored. The checkbox (Terms + Privacy) enables the Accept button.
+ * Consent screen shown before the patient check: explains
+ * that the check is informative and anonymous. The checkbox (Terms + Privacy) enables the Accept button.
  */
 export function ConsentGate({ onAccept }: { onAccept: () => void }) {
   const { t } = useLang();
@@ -16,10 +16,10 @@ export function ConsentGate({ onAccept }: { onAccept: () => void }) {
   const id = useId();
 
   const items = [
-    { icon: Cpu, text: t("consent.voice.local") },
-    { icon: DatabaseZap, text: t("consent.voice.not_stored") },
-    { icon: ShieldCheck, text: t("consent.voice.results") },
-    { icon: Mic, text: t("consent.voice.mic") },
+    { icon: Info, text: t("consent.hearing.informative") },
+    { icon: ShieldCheck, text: t("consent.hearing.anonymous") },
+    { icon: Headphones, text: t("consent.hearing.safety") },
+    { icon: Mic, text: t("consent.hearing.mic") },
   ];
 
   return (

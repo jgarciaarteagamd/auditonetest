@@ -4,7 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/lib/i18n";
 
-const STORAGE_KEY = "vocalyzer.cookies.accepted";
+const STORAGE_KEY = "auditone.cookies.accepted";
 
 export function CookieBanner() {
   const { t } = useLang();
